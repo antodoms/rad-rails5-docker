@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  postgresdb:
+    image: postgres:9.6
+    ports:
+      - "5432"
+    environment:
+      - POSTGRES_PASSWORD=admin@123
+      - POSTGRES_USER=postgres
+  app:
+    image: toy_app
+    working_dir: /app
+    command: puma
+    volumes:
+      - ./app:/app
+    depends_on:
+      - init_app
+      - postgresdb
+    ports: 
+      - 3000:3000
+  init_app:
+    build: ./app
+    image: toy_app
+    working_dir: /app
+    command: rails db:create db:migrate db:seed
+    volumes:
+      - ./app:/app
+    depends_on: 
+      - postgresdb
+  db_migrate:
+    image: toy_app
+    working_dir: /app
+    command: rails db:migrate
+    volumes:
+      - ./app:/app
+    depends_on: 
+      - postgresdb
+      - init_app
+  test:
+    image: toy_app
+    working_dir: /app
+    command: rails test
+    volumes:
+      - ./app:/app
+    depends_on: 
+      - postgresdb
+      - init_app
